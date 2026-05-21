@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════ STAT CARDS ═══════════ -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon indigo">👥</div>
+        <div class="stat-label">Total Employees</div>
+        <div class="stat-value">{{ stats.total_count }}</div>
+        <div class="stat-sub">Active workforce</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">💰</div>
+        <div class="stat-label">Average Salary</div>
+        <div class="stat-value">₹{{ "{:,.0f}".format(stats.avg_salary) }}</div>
+        <div class="stat-sub">Per employee</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon blue">🏆</div>
+        <div class="stat-label">Highest Salary</div>
+        <div class="stat-value">₹{{ "{:,.0f}".format(stats.max_salary) }}</div>
+        {% if stats.highest_paid %}
+        <div class="stat-sub">{{ stats.highest_paid.first_name }} {{ stats.highest_paid.last_name }}</div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">📉</div>
+        <div class="stat-label">Lowest Salary</div>
+        <div class="stat-value">₹{{ "{:,.0f}".format(stats.min_salary) }}</div>
+        {% if stats.lowest_paid %}
+        <div class="stat-sub">{{ stats.lowest_paid.first_name }} {{ stats.lowest_paid.last_name }}</div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">💵</div>
+        <div class="stat-label">Total Payroll</div>
+        <div class="stat-value">₹{{ "{:,.0f}".format(stats.total_salary) }}</div>
+        <div class="stat-sub">Monthly expenditure</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon red">🏢</div>
+        <div class="stat-label">Departments</div>
+        <div class="stat-value">{{ dept_stats | length }}</div>
+        <div class="stat-sub">Active departments</div>
+    </div>
+</div>
+
+
+<!-- ═══════════ CHARTS ═══════════ -->
+{% if salary_bar_chart or dept_pie_chart or salary_histogram %}
+<div class="chart-grid">
+    {% if dept_pie_chart %}
+    <div class="chart-card">
+        <h3>📊 Employee Distribution by Department</h3>
+        <img src="data:image/png;base64,{{ dept_pie_chart }}"
+             alt="Department-wise employee distribution donut chart"
+             loading="lazy">
+    </div>
+    {% endif %}
+
+    {% if salary_bar_chart %}
+    <div class="chart-card">
+        <h3>💹 Department-wise Average Salary</h3>
+        <img src="data:image/png;base64,{{ salary_bar_chart }}"
+             alt="Department average salary bar chart"
+             loading="lazy">
+    </div>
+    {% endif %}
+</div>
+
+{% if salary_histogram %}
+<div class="chart-grid" style="grid-template-columns: 1fr;">
+    <div class="chart-card">
+        <h3>📈 Salary Distribution Histogram</h3>
+        <img src="data:image/png;base64,{{ salary_histogram }}"
+             alt="Employee salary distribution histogram"
+             loading="lazy">
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+
+<!-- ═══════════ DEPARTMENT STATS ═══════════ -->
+{% if dept_stats %}
+<div class="card" style="margin-bottom: 28px;">
+    <div class="card-header">
+        <h2>🏢 Department-wise Statistics</h2>
+    </div>
+    <div class="card-body">
+        <div class="dept-stats-grid">
+            {% for dept in dept_stats %}
+            <div class="dept-stat-card">
+                <h4>🏷️ {{ dept.department }}</h4>
+                <div class="dept-metrics">
+                    <div class="dept-metric">
+                        <div class="metric-val">{{ dept.emp_count }}</div>
+                        <div class="metric-label">Employees</div>
+                    </div>
+                    <div class="dept-metric">
+                        <div class="metric-val">₹{{ "{:,.0f}".format(dept.avg_salary) }}</div>
+                        <div class="metric-label">Avg Salary</div>
+                    </div>
+                    <div class="dept-metric">
+                        <div class="metric-val">₹{{ "{:,.0f}".format(dept.max_salary) }}</div>
+                        <div class="metric-label">Highest</div>
+                    </div>
+                    <div class="dept-metric">
+                        <div class="metric-val">₹{{ "{:,.0f}".format(dept.min_salary) }}</div>
+                        <div class="metric-label">Lowest</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- ═══════════ EMPTY STATE ═══════════ -->
+{% if stats.total_count == 0 %}
+<div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>No Employee Data Yet</h3>
+    <p>Start by adding your first employee to see analytics and visualizations come to life.</p>
+    <a href="{{ url_for('add_employee') }}" class="btn btn-primary">
+        ➕ Add First Employee
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

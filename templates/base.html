@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart Employee Management System - Professional HR Dashboard">
+    <title>{% block title %}Employee Management{% endblock %} | EmpManager Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block body %}
+    <div class="app-layout">
+
+        <!-- Mobile overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ═══════════ SIDEBAR ═══════════ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">👥</div>
+                <h2>EmpManager<span>Management System</span></h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">Main</div>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('employees') }}" class="nav-link {% if request.endpoint in ['employees', 'add_employee', 'edit_employee'] %}active{% endif %}">
+                    <span class="nav-icon">👤</span>
+                    Employees
+                </a>
+                <a href="{{ url_for('add_employee') }}" class="nav-link {% if request.endpoint == 'add_employee' %}active{% endif %}" style="padding-left: 46px; font-size: 0.8125rem;">
+                    <span class="nav-icon" style="font-size:12px;">➕</span>
+                    Add Employee
+                </a>
+
+                <div class="nav-label">Reports</div>
+                <a href="{{ url_for('export_csv') }}" class="nav-link">
+                    <span class="nav-icon">📥</span>
+                    Export CSV
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger);">
+                    <span class="nav-icon">🚪</span>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- ═══════════ MAIN CONTENT ═══════════ -->
+        <div class="main-content">
+
+            <!-- Top header bar -->
+            <header class="top-header">
+                <div class="flex items-center gap-3">
+                    <button class="mobile-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="admin-badge">
+                        <div class="avatar">{{ session.get('admin_name', 'A')[0] }}</div>
+                        <span>{{ session.get('admin_name', 'Admin') }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {% if category == 'success' %}✅
+                    {% elif category == 'error' %}❌
+                    {% elif category == 'warning' %}⚠️
+                    {% else %}ℹ️{% endif %}
+                    <span>{{ message }}</span>
+                    <button class="alert-close" aria-label="Close">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Page content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+
+    </div>
+    {% endblock %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

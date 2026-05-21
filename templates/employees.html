@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Employees{% endblock %}
+{% block page_title %}Employee Directory{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════ TOOLBAR ═══════════ -->
+<form method="GET" action="{{ url_for('employees') }}" class="toolbar" id="filterForm">
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text"
+               name="search"
+               id="searchInput"
+               placeholder="Search by ID, name, or email..."
+               value="{{ search }}">
+    </div>
+
+    <select name="department" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Departments</option>
+        {% for dept in departments %}
+        <option value="{{ dept }}" {% if dept == selected_dept %}selected{% endif %}>{{ dept }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="status" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        <option value="Active" {% if selected_status == 'Active' %}selected{% endif %}>Active</option>
+        <option value="On Leave" {% if selected_status == 'On Leave' %}selected{% endif %}>On Leave</option>
+        <option value="Suspended" {% if selected_status == 'Suspended' %}selected{% endif %}>Suspended</option>
+        <option value="Terminated" {% if selected_status == 'Terminated' %}selected{% endif %}>Terminated</option>
+    </select>
+
+    <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+
+    {% if search or selected_dept or selected_status %}
+    <a href="{{ url_for('employees') }}" class="btn btn-secondary btn-sm" title="Clear filters">✕ Clear</a>
+    {% endif %}
+
+    <div class="toolbar-right">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-outline btn-sm">📥 Export CSV</a>
+        <a href="{{ url_for('add_employee') }}" class="btn btn-primary btn-sm">➕ Add Employee</a>
+    </div>
+</form>
+
+
+<!-- ═══════════ EMPLOYEE TABLE ═══════════ -->
+<div class="card">
+    <div class="card-header">
+        <h2>👤 Employees ({{ employees | length }})</h2>
+    </div>
+
+    {% if employees | length > 0 %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>ID</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Salary</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td>
+                        <div class="emp-name">
+                            <div class="emp-avatar">{{ emp.first_name[0] }}{{ emp.last_name[0] }}</div>
+                            <div class="emp-name-text">
+                                <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>
+                                <span>{{ emp.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code style="color: var(--primary-400); font-size: 0.8125rem;">{{ emp.emp_id }}</code></td>
+                    <td>{{ emp.department }}</td>
+                    <td>{{ emp.designation }}</td>
+                    <td class="salary-highlight">₹{{ "{:,.2f}".format(emp.salary) }}</td>
+                    <td style="white-space:nowrap; color: var(--slate-400); font-size:0.8125rem;">{{ emp.date_joined }}</td>
+                    <td>
+                        {% if emp.status == 'Active' %}
+                            <span class="badge badge-active">Active</span>
+                        {% elif emp.status == 'On Leave' %}
+                            <span class="badge badge-on-leave">On Leave</span>
+                        {% elif emp.status == 'Suspended' %}
+                            <span class="badge badge-suspended">Suspended</span>
+                        {% else %}
+                            <span class="badge badge-terminated">Terminated</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="td-actions">
+                            <a href="{{ url_for('edit_employee', emp_id=emp.emp_id) }}"
+                               class="btn btn-icon" title="Edit employee">✏️</a>
+                            <button class="btn btn-icon btn-delete-trigger"
+                                    data-emp-id="{{ emp.emp_id }}"
+                                    data-emp-name="{{ emp.first_name }} {{ emp.last_name }}"
+                                    title="Delete employee"
+                                    style="color: var(--danger);">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        {% if search or selected_dept or selected_status %}
+        <h3>No Results Found</h3>
+        <p>No employees match your current filters. Try adjusting your search criteria.</p>
+        <a href="{{ url_for('employees') }}" class="btn btn-secondary">Clear Filters</a>
+        {% else %}
+        <h3>No Employees Yet</h3>
+        <p>Get started by adding your first employee record to the system.</p>
+        <a href="{{ url_for('add_employee') }}" class="btn btn-primary">➕ Add Employee</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ═══════════ DELETE CONFIRMATION MODAL ═══════════ -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3>⚠️ Confirm Deletion</h3>
+        <p>Are you sure you want to delete <strong id="deleteEmpName"></strong>? This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary btn-sm modal-cancel">Cancel</button>
+            <form method="POST" id="deleteForm" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
