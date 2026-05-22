@@ -28,21 +28,37 @@ def get_db():
 # ---------------------------------------------------------------------------
 
 def init_db():
-    """Initialize the database: create tables and seed default admin."""
+    """Initialize the database safely by handling existing tables."""
     conn = get_db()
-    with open(SCHEMA, 'r') as f:
-        conn.executescript(f.read())
-
-    # Seed default admin if none exists
-    admin = conn.execute("SELECT id FROM admins LIMIT 1").fetchone()
-    if admin is None:
-        conn.execute(
-            "INSERT INTO admins (username, password_hash, full_name) VALUES (?, ?, ?)",
-            ('admin', generate_password_hash('admin123'), 'System Administrator')
-        )
+    
+    # 1. Safely try to read and build the schema
+    try:
+        with open(SCHEMA, 'r') as f:
+            conn.executescript(f.read())
         conn.commit()
-        print("[DB] Default admin created -> username: admin | password: admin123")
-    conn.close()
+    except sqlite3.OperationalError as e:
+        # This catches "table already exists" or duplicate schema errors safely
+        print(f"[DB] Schema matching notice: {e}. Skipping initialization.")
+    except Exception as e:
+        print(f"[DB] Setup exception warning: {e}")
+
+    # 2. Seed default admin if none exists
+    try:
+        admin = conn.execute("SELECT id FROM admins LIMIT 1").fetchone()
+        if admin is None:
+            conn.execute(
+                "INSERT INTO admins (username, password_hash, full_name) VALUES (?, ?, ?)",
+                ('admin', generate_password_hash('admin123'), 'System Administrator')
+            )
+            conn.commit()
+            print("[DB] Default admin verified -> username: admin | password: admin123")
+    except Exception as e:
+        print(f"[DB] Admin seeding notice: {e}")
+    finally:
+        conn.close()
+
+# Keep this at the absolute bottom of the file (no indentation) so it runs
+init_db()
 
 
 # ---------------------------------------------------------------------------
