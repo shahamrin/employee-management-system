@@ -243,3 +243,4 @@ def get_department_stats():
     """).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+init_db()
